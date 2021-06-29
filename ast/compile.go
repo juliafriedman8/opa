@@ -881,6 +881,8 @@ func compileSchema(goSchema interface{}) (*gojsonschema.Schema, error) {
 }
 
 func parseSchema(schema interface{}) (types.Type, error) {
+
+	//Converting schema into *gojsonschema.subSchema
 	subSchema, ok := schema.(*gojsonschema.SubSchema)
 	if !ok {
 		return nil, fmt.Errorf("unexpected schema type %v", subSchema)
@@ -889,6 +891,28 @@ func parseSchema(schema interface{}) (types.Type, error) {
 	// Handle referenced schemas, returns directly when a $ref is found
 	if subSchema.RefSchema != nil {
 		return parseSchema(subSchema.RefSchema)
+	}
+
+	//Implementing AllOf
+	if subSchema.AllOf != nil {
+		subSchemaArray := subSchema.AllOf
+		typeArray := make([]interface{}, 0, len(subSchemaArray))
+		for i := 0; i < len(subSchemaArray); i++ {
+			typeE, err := parseSchema(subSchemaArray[i])
+			if err != nil {
+				typeArray = append(typeArray, typeE)
+			}
+		}
+		//Turn typeArray into a subSchema
+		for i := 0; i < len(typeArray); i++ {
+			typeArray, ok := typeArray[i].(*gojsonschema.SubSchema)
+			if !ok {
+				return nil, fmt.Errorf("could not merge subSchemas %v", typeArray)
+			}
+		}
+		//Parse the created subSchema
+		return parseSchema(typeArray)
+
 	}
 
 	if subSchema.Types.IsTyped() {
