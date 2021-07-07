@@ -880,8 +880,76 @@ func compileSchema(goSchema interface{}) (*gojsonschema.Schema, error) {
 	return schemasCompiled, nil
 }
 
-func parseSchema(schema interface{}) (types.Type, error) {
+//Trying to merge JSON schemas
+func mergeSchemas(schemas []*gojsonschema.SubSchema) (*gojsonschema.SubSchema, error) {
+	if len(schemas) <= 1 {
+		return nil, fmt.Errorf("you must merge at least 1 JSON schema")
+	}
+	var result *gojsonschema.SubSchema
 
+	//how to actually merge them ?
+	for i := 0; i < len(schemas); i++ {
+
+		//IF YOU CANNOT MERGE
+		if schemas[i].Types.Contains("null") && schemas[i].Types.Contains("boolean") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("null") && schemas[i].Types.Contains("number") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("null") && schemas[i].Types.Contains("string") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("null") && schemas[i].Types.Contains("object") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("null") && schemas[i].Types.Contains("array") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("boolean") && schemas[i].Types.Contains("number") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("boolean") && schemas[i].Types.Contains("string") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("boolean") && schemas[i].Types.Contains("object") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("boolean") && schemas[i].Types.Contains("array") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("number") && schemas[i].Types.Contains("string") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("number") && schemas[i].Types.Contains("object") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("number") && schemas[i].Types.Contains("array") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("string") && schemas[i].Types.Contains("object") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("string") && schemas[i].Types.Contains("array") {
+			return nil, nil
+		} else if schemas[i].Types.Contains("object") && schemas[i].Types.Contains("array") {
+			return nil, nil
+
+			//IF YOU CAN MERGE
+		} else if schemas[i].Types.Contains("null") {
+			result.Types.Add("null")
+
+		} else if schemas[i].Types.Contains("boolean") {
+			result.Types.Add("boolean")
+
+		} else if schemas[i].Types.Contains("number") {
+			result.Types.Add("number")
+
+		} else if schemas[i].Types.Contains("string") {
+			result.Types.Add("string")
+
+		} else if schemas[i].Types.Contains("object") {
+			result.Types.Add("object")
+
+		} else if schemas[i].Types.Contains("array") {
+			result.Types.Add("array")
+
+		} else {
+			return nil, nil //ELSE CANNOT MERGE
+		}
+	}
+
+	return result, nil
+}
+
+func parseSchema(schema interface{}) (types.Type, error) {
 	//Converting schema into *gojsonschema.subSchema
 	subSchema, ok := schema.(*gojsonschema.SubSchema)
 	if !ok {
@@ -896,22 +964,34 @@ func parseSchema(schema interface{}) (types.Type, error) {
 	//Implementing AllOf
 	if subSchema.AllOf != nil {
 		subSchemaArray := subSchema.AllOf
-		typeArray := make([]interface{}, 0, len(subSchemaArray))
-		for i := 0; i < len(subSchemaArray); i++ {
-			typeE, err := parseSchema(subSchemaArray[i])
+		result, err := mergeSchemas(subSchemaArray)
+		if err != nil {
+			return nil, fmt.Errorf("unable to merge these schema due to: %w", err)
+		}
+
+		//making an array so the previous result can be a parameter for merge
+		var result2 []*gojsonschema.SubSchema
+		result2 = append(result2, result)
+
+		if result.Types.IsTyped() {
+			result1, err := mergeSchemas(result2)
 			if err != nil {
-				typeArray = append(typeArray, typeE)
+				return nil, fmt.Errorf("unable to merge these schema due to: %w", err)
 			}
+			return parseSchema(result1)
 		}
-		//Turn typeArray into a subSchema
-		for i := 0; i < len(typeArray); i++ {
-			typeArray, ok := typeArray[i].(*gojsonschema.SubSchema)
-			if !ok {
-				return nil, fmt.Errorf("could not merge subSchemas %v", typeArray)
-			}
-		}
+
+		// typeArray := make([]types.All, 0, len(subSchemaArray))
+		// for i := 0; i < len(subSchemaArray); i++ {
+		// 	typeE, err := parseSchema(subSchemaArray[i])
+		// 	if err != nil {
+		// 		typeE := typeE.(types.All) //turning typeE into All type so it can go in array
+		// 		typeArray = append(typeArray, typeE)
+		// 	}
+		// }
+
 		//Parse the created subSchema
-		return parseSchema(typeArray)
+		return parseSchema(result)
 
 	}
 
