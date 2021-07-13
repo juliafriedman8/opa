@@ -875,6 +875,20 @@ func TestCompilerCheckTypesWithSchema(t *testing.T) {
 	assertNotFailed(t, c)
 }
 
+func TestCompilerCheckTypesWithAllOf(t *testing.T) {
+	c := NewCompiler()
+	var schema interface{}
+	err := util.Unmarshal([]byte(allOfSchema), &schema)
+	if err != nil {
+		t.Fatal("Unexpected error:", err)
+	}
+	schemaSet := NewSchemaSet()
+	schemaSet.Put(SchemaRootRef, schema)
+	c.WithSchemas(schemaSet)
+	compileStages(c, c.checkTypes)
+	assertNotFailed(t, c)
+}
+
 func TestCompilerCheckRuleConflicts(t *testing.T) {
 
 	c := getCompilerWithParsedModules(map[string]string{
@@ -4521,3 +4535,33 @@ const podSchema = `
     "$schema": "http://json-schema.org/schema#"
   }
 `
+const allOfSchema = `{
+
+	"type": "object",
+	"title": "The root schema",
+	"description": "The root schema comprises the entire JSON document.",
+	"required": [
+		"entityA",
+		"entityB",
+		"entityC"
+	],
+	"properties": {
+		"entityA": {
+			"%id": "#/properties/entityA",
+			"type": "string",
+			"title": "EntityA schema",
+			"description": "An explanation about the purpose of this instance."
+		},
+		"entityB": {
+			"%id": "#/properties/entityB",
+			"type": "string",
+			"title": "EntityA schema",
+			"description": "An explanation about the purpose of this instance."
+		},
+		"entityC": {
+			allOf:
+				- $ref: '#components/schemas/entityA'
+				- $ref: '#components/schemas/entityB'
+		}
+	}
+}`
