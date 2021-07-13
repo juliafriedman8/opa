@@ -883,69 +883,124 @@ func compileSchema(goSchema interface{}) (*gojsonschema.Schema, error) {
 	return schemasCompiled, nil
 }
 
-//Trying to merge JSON schemas
+// merge JSON schemas
 func mergeSchemas(schemas []*gojsonschema.SubSchema) (*gojsonschema.SubSchema, error) {
 	if len(schemas) <= 1 {
 		return nil, fmt.Errorf("you must merge at least 1 JSON schema")
 	}
 	var result *gojsonschema.SubSchema
+	//var numSchemas int = len(schemas)
+	var counter int = len(schemas) / 2
 
-	//how to actually merge them ?
-	for i := 0; i < len(schemas); i++ {
+	//need to fix this
+	for counter > 1 {
 
-		//IF YOU CANNOT MERGE
-		if schemas[i].Types.Contains("null") && schemas[i].Types.Contains("boolean") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("null") && schemas[i].Types.Contains("number") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("null") && schemas[i].Types.Contains("string") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("null") && schemas[i].Types.Contains("object") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("null") && schemas[i].Types.Contains("array") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("boolean") && schemas[i].Types.Contains("number") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("boolean") && schemas[i].Types.Contains("string") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("boolean") && schemas[i].Types.Contains("object") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("boolean") && schemas[i].Types.Contains("array") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("number") && schemas[i].Types.Contains("string") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("number") && schemas[i].Types.Contains("object") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("number") && schemas[i].Types.Contains("array") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("string") && schemas[i].Types.Contains("object") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("string") && schemas[i].Types.Contains("array") {
-			return nil, nil
-		} else if schemas[i].Types.Contains("object") && schemas[i].Types.Contains("array") {
-			return nil, nil
+		for i := 0; i < len(schemas); i++ {
 
-			//IF YOU CAN MERGE
-		} else if schemas[i].Types.Contains("null") {
-			result.Types.Add("null")
+			//IF YOU CANNOT MERGE
+			if schemas[i].Types.Contains("null") && schemas[i+1].Types.Contains("boolean") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("null") && schemas[i+1].Types.Contains("number") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("null") && schemas[i+1].Types.Contains("string") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("null") && schemas[i+1].Types.Contains("object") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("null") && schemas[i+1].Types.Contains("array") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("null") && schemas[i+1].Types.Contains("integer") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("boolean") && schemas[i+1].Types.Contains("number") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("boolean") && schemas[i+1].Types.Contains("string") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("boolean") && schemas[i+1].Types.Contains("object") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("boolean") && schemas[i+1].Types.Contains("array") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("boolean") && schemas[i+1].Types.Contains("integer") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("number") && schemas[i+1].Types.Contains("string") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("number") && schemas[i+1].Types.Contains("object") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("number") && schemas[i+1].Types.Contains("array") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("number") && schemas[i+1].Types.Contains("integer") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("string") && schemas[i+1].Types.Contains("object") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("string") && schemas[i+1].Types.Contains("array") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("string") && schemas[i+1].Types.Contains("integer") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("object") && schemas[i+1].Types.Contains("array") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("object") && schemas[i+1].Types.Contains("integer") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
+			}
+			if schemas[i].Types.Contains("array") && schemas[i+1].Types.Contains("integer") {
+				return nil, fmt.Errorf("cannot merge schemas of different types")
 
-		} else if schemas[i].Types.Contains("boolean") {
-			result.Types.Add("boolean")
+				//IF YOU CAN MERGE
+			} else if schemas[i].Types.Contains(schemas[i+1].Types.String()) {
+				result = schemas[i]
+			}
 
-		} else if schemas[i].Types.Contains("number") {
-			result.Types.Add("number")
+			// else if schemas[i].Types.Contains("null") && schemas[i+1].Types.Contains("null") {
+			// 	//schemas[i].Types.String() = "null"
+			// 	result.Types.String() := "null"
+			// 	hello = "null"
 
-		} else if schemas[i].Types.Contains("string") {
-			result.Types.Add("string")
+			// } else if schemas[i].Types.Contains("boolean") && schemas[i+1].Types.Contains("boolean") {
+			// 	var hello = schemas[i].Types.String()
+			// 	hello = "boolean"
 
-		} else if schemas[i].Types.Contains("object") {
-			result.Types.Add("object")
+			// } else if schemas[i].Types.Contains("number") && schemas[i+1].Types.Contains("number") {
+			// 	var hello = schemas[i].Types.String()
+			// 	hello = "number"
 
-		} else if schemas[i].Types.Contains("array") {
-			result.Types.Add("array")
+			// } else if schemas[i].Types.Contains("string") && schemas[i+1].Types.Contains("string") {
+			// 	var hello = schemas[i].Types.String()
+			// 	hello = "string"
 
-		} else {
-			return nil, nil //ELSE CANNOT MERGE
+			// } else if schemas[i].Types.Contains("object") && schemas[i+1].Types.Contains("object") {
+			// 	var hello = schemas[i].Types.String()
+			// 	hello = "object"
+
+			// } else if schemas[i].Types.Contains("array") && schemas[i+1].Types.Contains("array") {
+			// 	var hello = schemas[i].Types.String()
+			// 	hello = "array"
+
+			// } else if schemas[i].Types.Contains("integer") && schemas[i+1].Types.Contains("integer") {
+			// 	var hello = schemas[i].Types.String()
+			// 	hello = "integer"
+
+			// } //else {
+			//return nil, fmt.Errorf("cannot merge schemas")
+			//}
+
+			counter--
+
 		}
 	}
 
@@ -972,6 +1027,7 @@ func parseSchema(schema interface{}) (types.Type, error) {
 			return nil, fmt.Errorf("unable to merge these schema due to: %w", err)
 		}
 
+		//change variable names
 		//making an array so the previous result can be a parameter for merge
 		var result2 []*gojsonschema.SubSchema
 		result2 = append(result2, result)
