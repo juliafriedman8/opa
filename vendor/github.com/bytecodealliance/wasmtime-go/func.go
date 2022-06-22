@@ -112,7 +112,9 @@ func goTrampolineNew(
 	}()
 	if trap == nil && lastPanic != nil {
 		data.lastPanic = lastPanic
-		return nil
+		trap := NewTrap("go panicked")
+		runtime.SetFinalizer(trap, nil)
+		return trap.ptr()
 	}
 	if trap != nil {
 		runtime.SetFinalizer(trap, nil)
@@ -143,7 +145,7 @@ func goTrampolineNew(
 //
 // `float32` - a wasm `f32`
 //
-// `float64` - a wasm `f32`
+// `float64` - a wasm `f64`
 //
 // `*Caller` - information about the caller's instance
 //
@@ -276,7 +278,9 @@ func goTrampolineWrap(
 	}()
 	if lastPanic != nil {
 		data.lastPanic = lastPanic
-		return nil
+		trap := NewTrap("go panicked")
+		runtime.SetFinalizer(trap, nil)
+		return trap.ptr()
 	}
 
 	// And now we write all the results into memory depending on the type
